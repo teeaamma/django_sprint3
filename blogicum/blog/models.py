@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -83,6 +84,8 @@ class Post(BaseModel):
         related_name="posts",
         verbose_name="Категория"
     )
+    image = models.ImageField('Фото', upload_to='posts_images', blank=True)
+    comment_count = models.IntegerField("Количество комментариев", default=0)
 
     class Meta:
         verbose_name = "публикация"
@@ -91,3 +94,23 @@ class Post(BaseModel):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('blog:post_detail', kwargs={'post_id': self.id})
+
+
+class Comment(models.Model):
+    text = models.TextField('Текст комментария')
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('created_at',)
+
+    def get_absolute_url(self):
+        return reverse('blog:post_detail', kwargs={'post_id': self.post.id})
